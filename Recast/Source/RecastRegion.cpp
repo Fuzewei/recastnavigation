@@ -1600,6 +1600,9 @@ bool rcBuildRegions(rcContext* ctx, rcCompactHeightfield& chf,
 			rcScopedTimer timerExpand(ctx, RC_TIMER_BUILD_REGIONS_EXPAND);
 
 			// Expand current regions until no empty connected cells found.
+			/*
+			* 所有没有归属区域的sapn，向周围扩张一次，如果周围有区域（srcDist最小的），就划给该区域，同时srcDist增加（因为不是直接漫水得来的）
+			*/
 			expandRegions(expandIters, level, chf, srcReg, srcDist, lvlStacks[sId], false);
 		}
 		
@@ -1615,7 +1618,7 @@ bool rcBuildRegions(rcContext* ctx, rcCompactHeightfield& chf,
 				int i = current.index;
 				if (i >= 0 && srcReg[i] == 0)
 				{
-					if (floodRegion(x, y, i, level, regionId, chf, srcReg, srcDist, stack))
+					if (floodRegion(x, y, i, level, regionId, chf, srcReg, srcDist, stack))//从当前点i开始漫水，新的山顶导致region+1 如果周围有的就不作为新的灌水起点
 					{
 						if (regionId == 0xFFFF)
 						{

@@ -911,7 +911,7 @@ bool rcBuildContours(rcContext* ctx, rcCompactHeightfield& chf,
 			const rcCompactCell& c = chf.cells[x+y*w];
 			for (int i = (int)c.index, ni = (int)(c.index+c.count); i < ni; ++i)
 			{
-				if (flags[i] == 0 || flags[i] == 0xf)
+				if (flags[i] == 0 || flags[i] == 0xf)//四周的区域都相同和四周都是不同的区域(包括不连通的)
 				{
 					flags[i] = 0;
 					continue;

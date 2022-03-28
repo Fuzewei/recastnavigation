@@ -1135,7 +1135,7 @@ bool rcBuildPolyMesh(rcContext* ctx, rcContourSet& cset, const int nvp, rcPolyMe
 		{
 			const int* v = &cont.verts[j*4];
 			indices[j] = addVertex((unsigned short)v[0], (unsigned short)v[1], (unsigned short)v[2],
-								   mesh.verts, firstVert, nextVert, mesh.nverts);
+								   mesh.verts, firstVert, nextVert, mesh.nverts);//indices对应的值指向在mesh.nverts中的位置，first和next维护同一个bucket的前后关系类似一个链表，first是链头
 			if (v[3] & RC_BORDER_VERTEX)
 			{
 				// This vertex should be removed.

@@ -452,9 +452,14 @@ bool Sample_SoloMesh::handleBuild()
 	// Find triangles which are walkable based on their slope and rasterize them.
 	// If your input data is multiple meshes, you can transform them here, calculate
 	// the are type for each of the meshes and rasterize them.
+
+	/*
+	* 场景的aabb盒被划分为 x和z的二维格子，y轴的格子是场景中各个三角形格子的合并，x和z二维的高度信息存在m_solid.spans，它从底到高用链表把
+	* 连续的部分连接起来，这样整个场景划分为一个一个长方体柱子（有间隙的）
+	*/
 	memset(m_triareas, 0, ntris*sizeof(unsigned char));
 	rcMarkWalkableTriangles(m_ctx, m_cfg.walkableSlopeAngle, verts, nverts, tris, ntris, m_triareas);
-	if (!rcRasterizeTriangles(m_ctx, verts, nverts, tris, m_triareas, ntris, *m_solid, m_cfg.walkableClimb))
+	if (!rcRasterizeTriangles(m_ctx, verts, nverts, tris, m_triareas, ntris, *m_solid, m_cfg.walkableClimb))//根据walkableClimb合并可行走的区域
 	{
 		m_ctx->log(RC_LOG_ERROR, "buildNavigation: Could not rasterize triangles.");
 		return false;
@@ -548,7 +553,7 @@ bool Sample_SoloMesh::handleBuild()
 	if (m_partitionType == SAMPLE_PARTITION_WATERSHED)
 	{
 		// Prepare for region partitioning, by calculating distance field along the walkable surface.
-		if (!rcBuildDistanceField(m_ctx, *m_chf))
+		if (!rcBuildDistanceField(m_ctx, *m_chf)) //dist里存的是距离
 		{
 			m_ctx->log(RC_LOG_ERROR, "buildNavigation: Could not build distance field.");
 			return false;

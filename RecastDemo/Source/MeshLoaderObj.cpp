@@ -201,9 +201,9 @@ bool rcMeshLoaderObj::load(const std::string& filename)
 			nv = parseFace(row+1, face, 32, m_vertCount);
 			for (int i = 2; i < nv; ++i)
 			{
-				const int a = face[0];
-				const int b = face[i-1];
-				const int c = face[i];
+				const int a = face[0];//x
+				const int b = face[i-1];//y
+				const int c = face[i];//z
 				if (a < 0 || a >= m_vertCount || b < 0 || b >= m_vertCount || c < 0 || c >= m_vertCount)
 					continue;
 				addTriangle(a, b, c, tcap);

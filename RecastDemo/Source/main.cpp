@@ -694,7 +694,7 @@ int main(int /*argc*/, char** /*argv*/)
 				string path = meshesFolder + "/" + meshName;
 				
 				geom = new InputGeom;
-				if (!geom->load(&ctx, path))
+				if (!geom->load(&ctx, path))  //读取obj文件，根据顶点索引生成面的信息（fzwadd）
 				{
 					delete geom;
 					geom = 0;
