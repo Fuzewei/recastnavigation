@@ -275,8 +275,8 @@ static const int RC_SPANS_PER_POOL = 2048;
 /// @see rcHeightfield
 struct rcSpan
 {
-	unsigned int smin : RC_SPAN_HEIGHT_BITS; ///< The lower limit of the span. [Limit: < #smax]
-	unsigned int smax : RC_SPAN_HEIGHT_BITS; ///< The upper limit of the span. [Limit: <= #RC_SPAN_MAX_HEIGHT]
+	unsigned int smin : RC_SPAN_HEIGHT_BITS; ///< The lower limit of the span. [Limit: < #smax]  长方形高的范围
+	unsigned int smax : RC_SPAN_HEIGHT_BITS; ///< The upper limit of the span. [Limit: <= #RC_SPAN_MAX_HEIGHT] 方形高的范围
 	unsigned int area : 6;                   ///< The area id assigned to the span.
 	rcSpan* next;                            ///< The next span higher up in column.
 };
@@ -323,7 +323,7 @@ struct rcCompactCell
 struct rcCompactSpan
 {
 	unsigned short y;			///< The lower extent of the span. (Measured from the heightfield's base.)
-	unsigned short reg;			///< The id of the region the span belongs to. (Or zero if not in a region.)
+	unsigned short reg;			///< The id of the region the span belongs to. (Or zero if not in a region.) rcBuildRegions（Watershed partitioning）会生成所属的区域
 	unsigned int con : 24;		///< Packed neighbor connection data.
 	unsigned int h : 8;			///< The height of the span.  (Measured from #y.)
 };
@@ -346,10 +346,11 @@ struct rcCompactHeightfield
 	float bmax[3];				///< The maximum bounds in world space. [(x, y, z)]
 	float cs;					///< The size of each cell. (On the xz-plane.)
 	float ch;					///< The height of each cell. (The minimum increment along the y-axis.)
-	rcCompactCell* cells;		///< Array of cells. [Size: #width*#height]
-	rcCompactSpan* spans;		///< Array of spans. [Size: #spanCount]
-	unsigned short* dist;		///< Array containing border distance data. [Size: #spanCount]
-	unsigned char* areas;		///< Array containing area id data. [Size: #spanCount]
+	rcCompactCell* cells;		///< Array of cells. [Size: #width*#height]  #是rcCompactCell类型，表示当前cell位置的index再spans的位置，还有从上到下的个数，相当于存了个索引
+	rcCompactSpan* spans;		///< Array of spans. [Size: #spanCount]  #保存具体的高度信息和连接信息，连接信息是周围四个方向cells上开始的索引，由rcBuildCompactHeightfield生成
+	unsigned short* dist;		///< Array containing border distance data. [Size: #spanCount] 保存了每个span到边界的距离
+	unsigned char* areas;		///< Array containing area id data. [Size: #spanCount] #保存spans也就是高度场的所属区域信息，每和连通的区域是一个，RC_NULL_AREA表示该区域不可达，rcErodeWalkableArea会修改这个信息
+	//areas表示物理上相连的区域，rcCompactSpan的reg是在areas上的细分
 };
 
 /// Represents a heightfield layer within a layer set.
@@ -387,7 +388,7 @@ struct rcHeightfieldLayerSet
 /// Represents a simple, non-overlapping contour in field space.
 struct rcContour
 {
-	int* verts;			///< Simplified contour vertex and connection data. [Size: 4 * #nverts]
+	int* verts;			///< Simplified contour vertex and connection data. [Size: 4 * #nverts] 第四个是标记位 RC_BORDER_VERTEX， RC_AREA_BORDER等表这个顶点是不是边缘
 	int nverts;			///< The number of vertices in the simplified contour. 
 	int* rverts;		///< Raw contour vertex and connection data. [Size: 4 * #nrverts]
 	int nrverts;		///< The number of vertices in the raw contour. 
@@ -420,10 +421,10 @@ struct rcPolyMesh
 	rcPolyMesh();
 	~rcPolyMesh();
 	unsigned short* verts;	///< The mesh vertices. [Form: (x, y, z) * #nverts]
-	unsigned short* polys;	///< Polygon and neighbor data. [Length: #maxpolys * 2 * #nvp]
-	unsigned short* regs;	///< The region id assigned to each polygon. [Length: #maxpolys]
+	unsigned short* polys;	///< Polygon and neighbor data. [Length: #maxpolys * 2 * #nvp]  多边型的索引和临接信息，在节点的后面，表示对应节点的边的临接区域id
+	unsigned short* regs;	///< The region id assigned to each polygon. [Length: #maxpolys] 对应polyid的reg
 	unsigned short* flags;	///< The user defined flags for each polygon. [Length: #maxpolys]
-	unsigned char* areas;	///< The area id assigned to each polygon. [Length: #maxpolys]
+	unsigned char* areas;	///< The area id assigned to each polygon. [Length: #maxpolys]对应polyid的area
 	int nverts;				///< The number of vertices.
 	int npolys;				///< The number of polygons.
 	int maxpolys;			///< The number of allocated polygons.

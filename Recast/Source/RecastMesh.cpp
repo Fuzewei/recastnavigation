@@ -412,7 +412,7 @@ static int triangulate(int n, const int* verts, int* indices, int* tris)
 				return -ntris;
 			}
 		}
-		
+		// i,i1,i2是切割的角点的三个索引，i1是突出的那个
 		int i = mini;
 		int i1 = next(i, n);
 		int i2 = next(i1, n);
@@ -1112,7 +1112,7 @@ bool rcBuildPolyMesh(rcContext* ctx, rcContourSet& cset, const int nvp, rcPolyMe
 		for (int j = 0; j < cont.nverts; ++j)
 			indices[j] = j;
 			
-		int ntris = triangulate(cont.nverts, cont.verts, &indices[0], &tris[0]);
+		int ntris = triangulate(cont.nverts, cont.verts, &indices[0], &tris[0]); //tris里存的三角形点的索引（只有三个点指向cont.verts）ntris是三角形的个数
 		if (ntris <= 0)
 		{
 			// Bad triangulation, should not happen.
@@ -1135,7 +1135,7 @@ bool rcBuildPolyMesh(rcContext* ctx, rcContourSet& cset, const int nvp, rcPolyMe
 		{
 			const int* v = &cont.verts[j*4];
 			indices[j] = addVertex((unsigned short)v[0], (unsigned short)v[1], (unsigned short)v[2],
-								   mesh.verts, firstVert, nextVert, mesh.nverts);//indices对应的值指向在mesh.nverts中的位置，first和next维护同一个bucket的前后关系类似一个链表，first是链头
+								   mesh.verts, firstVert, nextVert, mesh.nverts);//indices对应的值指向在mesh.verts中的位置，mesh.verts存了所有顶点，first和next维护同一个bucket的前后关系类似一个链表，first是链头
 			if (v[3] & RC_BORDER_VERTEX)
 			{
 				// This vertex should be removed.
@@ -1145,13 +1145,13 @@ bool rcBuildPolyMesh(rcContext* ctx, rcContourSet& cset, const int nvp, rcPolyMe
 
 		// Build initial polygons.
 		int npolys = 0;
-		memset(polys, 0xff, maxVertsPerCont*nvp*sizeof(unsigned short));
+		memset(polys, 0xff, maxVertsPerCont*nvp*sizeof(unsigned short));//每个poly前三个是索引指向mesh.verts
 		for (int j = 0; j < ntris; ++j)
 		{
 			int* t = &tris[j*3];
 			if (t[0] != t[1] && t[0] != t[2] && t[1] != t[2])
 			{
-				polys[npolys*nvp+0] = (unsigned short)indices[t[0]];
+				polys[npolys*nvp+0] = (unsigned short)indices[t[0]];  //tris里存的指向cont.verts的索引，indices对应位置存的是在mesh.verts的位置，做了这个转换让polys指向的是mesh.verts里的位置
 				polys[npolys*nvp+1] = (unsigned short)indices[t[1]];
 				polys[npolys*nvp+2] = (unsigned short)indices[t[2]];
 				npolys++;
@@ -1249,7 +1249,7 @@ bool rcBuildPolyMesh(rcContext* ctx, rcContourSet& cset, const int nvp, rcPolyMe
 	}
 	
 	// Calculate adjacency.
-	if (!buildMeshAdjacency(mesh.polys, mesh.npolys, mesh.nverts, nvp))
+	if (!buildMeshAdjacency(mesh.polys, mesh.npolys, mesh.nverts, nvp))//mesh.polys里面每一个poly的前部分是顶点的索引，后面的对应位置是顶点开始的线的临接对应的poly的id
 	{
 		ctx->log(RC_LOG_ERROR, "rcBuildPolyMesh: Adjacency failed.");
 		return false;

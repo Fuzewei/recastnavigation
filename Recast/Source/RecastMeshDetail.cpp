@@ -33,7 +33,7 @@ struct rcHeightPatch
 {
 	inline rcHeightPatch() : data(0), xmin(0), ymin(0), width(0), height(0) {}
 	inline ~rcHeightPatch() { rcFree(data); }
-	unsigned short* data;
+	unsigned short* data;  //data的索引是相对于这个box的左下角的0,0
 	int xmin, ymin, width, height;
 };
 
@@ -583,7 +583,7 @@ static void triangulateHull(const int /*nverts*/, const float* verts, const int 
 	}
 	
 	// Add first triangle
-	tris.push(hull[start]);
+	tris.push(hull[start]); //tris存的也是顶点索引，指向verts，表示三角形
 	tris.push(hull[left]);
 	tris.push(hull[right]);
 	tris.push(0);
@@ -651,7 +651,7 @@ static bool buildPolyDetail(rcContext* ctx, const float* in, const int nin,
 	nverts = nin;
 	
 	for (int i = 0; i < nin; ++i)
-		rcVcopy(&verts[i*3], &in[i*3]);
+		rcVcopy(&verts[i*3], &in[i*3]); //verts现在是多边形角点的坐标（float）
 	
 	edges.clear();
 	tris.clear();
@@ -710,13 +710,13 @@ static bool buildPolyDetail(rcContext* ctx, const float* in, const int nin,
 				pos[1] = getHeight(pos[0],pos[1],pos[2], cs, ics, chf.ch, heightSearchRadius, hp)*chf.ch;
 			}
 			// Simplify samples.
-			int idx[MAX_VERTS_PER_EDGE] = {0,nn};
+			int idx[MAX_VERTS_PER_EDGE] = {0,nn};  //idx简化后的索引指向edge，这些是一条边上最后的取样点
 			int nidx = 2;
 			for (int k = 0; k < nidx-1; )
 			{
 				const int a = idx[k];
 				const int b = idx[k+1];
-				const float* va = &edge[a*3];
+				const float* va = &edge[a*3]; //edge就是一条边界线采样后的集合
 				const float* vb = &edge[b*3];
 				// Find maximum deviation along the segment.
 				float maxd = 0;
@@ -766,7 +766,7 @@ static bool buildPolyDetail(rcContext* ctx, const float* in, const int nin,
 				}
 			}
 		}
-	}
+	}//verts前面是多边形角点的坐标，后面是采样后所有边上的点，hull里是这些采样后点的索引，指向的verts，索引比nin小的都是原来的顶点
 	
 	// If the polygon minimum extent is small (sliver or small triangle), do not try to add internal points.
 	if (minExtent < sampleDist*2)
@@ -1295,7 +1295,7 @@ bool rcBuildPolyMeshDetail(rcContext* ctx, const rcPolyMesh& mesh, const rcCompa
 		hp.ymin = bounds[i*4+2];
 		hp.width = bounds[i*4+1]-bounds[i*4+0];
 		hp.height = bounds[i*4+3]-bounds[i*4+2];
-		getHeightData(ctx, chf, p, npoly, mesh.verts, borderSize, hp, arr, mesh.regs[i]);
+		getHeightData(ctx, chf, p, npoly, mesh.verts, borderSize, hp, arr, mesh.regs[i]);//计算得到hp.data里面是对应aabb盒里的高度信息还是体素的高度int
 		
 		// Build detail mesh.
 		int nverts = 0;
@@ -1326,10 +1326,10 @@ bool rcBuildPolyMeshDetail(rcContext* ctx, const rcPolyMesh& mesh, const rcCompa
 		// Store detail submesh.
 		const int ntris = tris.size()/4;
 		
-		dmesh.meshes[i*4+0] = (unsigned int)dmesh.nverts;
-		dmesh.meshes[i*4+1] = (unsigned int)nverts;
-		dmesh.meshes[i*4+2] = (unsigned int)dmesh.ntris;
-		dmesh.meshes[i*4+3] = (unsigned int)ntris;
+		dmesh.meshes[i*4+0] = (unsigned int)dmesh.nverts;  //每个mesh有四个信息 1.顶点开始的索引（dmesh.verts中）
+		dmesh.meshes[i*4+1] = (unsigned int)nverts;//2.顶点的个数
+		dmesh.meshes[i*4+2] = (unsigned int)dmesh.ntris;//3三角形的开始索引（dmesh.tris中）
+		dmesh.meshes[i*4+3] = (unsigned int)ntris;//2.三角形的个数
 		
 		// Store vertices, allocate more memory if necessary.
 		if (dmesh.nverts+nverts > vcap)
@@ -1350,7 +1350,7 @@ bool rcBuildPolyMeshDetail(rcContext* ctx, const rcPolyMesh& mesh, const rcCompa
 		}
 		for (int j = 0; j < nverts; ++j)
 		{
-			dmesh.verts[dmesh.nverts*3+0] = verts[j*3+0];
+			dmesh.verts[dmesh.nverts*3+0] = verts[j*3+0];//顶点信息（世界坐标）
 			dmesh.verts[dmesh.nverts*3+1] = verts[j*3+1];
 			dmesh.verts[dmesh.nverts*3+2] = verts[j*3+2];
 			dmesh.nverts++;
@@ -1375,10 +1375,10 @@ bool rcBuildPolyMeshDetail(rcContext* ctx, const rcPolyMesh& mesh, const rcCompa
 		for (int j = 0; j < ntris; ++j)
 		{
 			const int* t = &tris[j*4];
-			dmesh.tris[dmesh.ntris*4+0] = (unsigned char)t[0];
+			dmesh.tris[dmesh.ntris*4+0] = (unsigned char)t[0];  //三角形的索引信息（索引到dmesh.verts）
 			dmesh.tris[dmesh.ntris*4+1] = (unsigned char)t[1];
 			dmesh.tris[dmesh.ntris*4+2] = (unsigned char)t[2];
-			dmesh.tris[dmesh.ntris*4+3] = getTriFlags(&verts[t[0]*3], &verts[t[1]*3], &verts[t[2]*3], poly, npoly);
+			dmesh.tris[dmesh.ntris*4+3] = getTriFlags(&verts[t[0]*3], &verts[t[1]*3], &verts[t[2]*3], poly, npoly);//指示三角形的三个边是不是多边形的边线（从0开始0-1,1-2,2-0）
 			dmesh.ntris++;
 		}
 	}

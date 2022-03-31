@@ -124,7 +124,7 @@ static void walkContour(int x, int y, int i,
 			bool isBorderVertex = false;
 			bool isAreaBorder = false;
 			int px = x;
-			int py = getCornerHeight(x, y, i, dir, chf, isBorderVertex);
+			int py = getCornerHeight(x, y, i, dir, chf, isBorderVertex); //边缘span三个中的最高值
 			int pz = y;
 			switch(dir)
 			{

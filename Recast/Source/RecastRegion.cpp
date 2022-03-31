@@ -1609,7 +1609,7 @@ bool rcBuildRegions(rcContext* ctx, rcCompactHeightfield& chf,
 		{
 			rcScopedTimer timerFloor(ctx, RC_TIMER_BUILD_REGIONS_FLOOD);
 
-			// Mark new regions with IDs.
+			// Mark new regions with IDs，如果当前层还没expandRegions和周围的合并，那么就是一个山峰，需要从漫水法
 			for (int j = 0; j<lvlStacks[sId].size(); j++)
 			{
 				LevelStackEntry current = lvlStacks[sId][j];
