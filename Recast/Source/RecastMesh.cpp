@@ -67,8 +67,8 @@ static bool buildMeshAdjacency(unsigned short* polys, const int npolys,
 				rcEdge& edge = edges[edgeCount];
 				edge.vert[0] = v0;
 				edge.vert[1] = v1;
-				edge.poly[0] = (unsigned short)i;
-				edge.polyEdge[0] = (unsigned short)j;
+				edge.poly[0] = (unsigned short)i;//保存的是这个边所属的polyid
+				edge.polyEdge[0] = (unsigned short)j;//保存的是这个边所属的线的开始在poly中的索引
 				edge.poly[1] = (unsigned short)i;
 				edge.polyEdge[1] = 0;
 				// Insert edge

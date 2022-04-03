@@ -426,7 +426,7 @@ bool InputGeom::raycastMesh(float* src, float* dst, float& tmin)
 {
 	// Prune hit ray.
 	float btmin, btmax;
-	if (!isectSegAABB(src, dst, m_meshBMin, m_meshBMax, btmin, btmax))
+	if (!isectSegAABB(src, dst, m_meshBMin, m_meshBMax, btmin, btmax)) //和aabb盒相交，btmin是t的最小值，btmax是t的最大值
 		return false;
 	float p[2], q[2];
 	p[0] = src[0] + (dst[0]-src[0])*btmin;

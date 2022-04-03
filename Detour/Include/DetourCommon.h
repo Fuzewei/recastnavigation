@@ -434,7 +434,7 @@ bool dtOverlapPolyPoly2D(const float* polya, const int npolya,
 						 const float* polyb, const int npolyb);
 
 /// @}
-/// @name Miscellanious functions.
+/// @name Miscellanious functions.计算临近的较大的2的整数次幂（0 ,1, 2 4 8 16）
 /// @{
 
 inline unsigned int dtNextPow2(unsigned int v)

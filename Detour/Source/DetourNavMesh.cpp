@@ -232,7 +232,7 @@ dtStatus dtNavMesh::init(const dtNavMeshParams* params)
 	m_maxTiles = params->maxTiles;
 	m_tileLutSize = dtNextPow2(params->maxTiles/4);
 	if (!m_tileLutSize) m_tileLutSize = 1;
-	m_tileLutMask = m_tileLutSize-1;
+	m_tileLutMask = m_tileLutSize-1;//摸的数
 	
 	m_tiles = (dtMeshTile*)dtAlloc(sizeof(dtMeshTile)*m_maxTiles, DT_ALLOC_PERM);
 	if (!m_tiles)
@@ -241,8 +241,8 @@ dtStatus dtNavMesh::init(const dtNavMeshParams* params)
 	if (!m_posLookup)
 		return DT_FAILURE | DT_OUT_OF_MEMORY;
 	memset(m_tiles, 0, sizeof(dtMeshTile)*m_maxTiles);
-	memset(m_posLookup, 0, sizeof(dtMeshTile*)*m_tileLutSize);
-	m_nextFree = 0;
+	memset(m_posLookup, 0, sizeof(dtMeshTile*)*m_tileLutSize);//实际的被填了的tile链表，用hash的方法加速tile的寻找
+	m_nextFree = 0;//m_nextFree指向一个链表，表示已分配的dtMeshTile
 	for (int i = m_maxTiles-1; i >= 0; --i)
 	{
 		m_tiles[i].salt = 1;
@@ -252,7 +252,7 @@ dtStatus dtNavMesh::init(const dtNavMeshParams* params)
 	
 	// Init ID generator values.
 #ifndef DT_POLYREF64
-	m_tileBits = dtIlog2(dtNextPow2((unsigned int)params->maxTiles));
+	m_tileBits = dtIlog2(dtNextPow2((unsigned int)params->maxTiles));//计算存下params->maxTiles的数量需要2的几次方
 	m_polyBits = dtIlog2(dtNextPow2((unsigned int)params->maxPolys));
 	// Only allow 31 salt bits, since the salt mask is calculated using 32bit uint and it will overflow.
 	m_saltBits = dtMin((unsigned int)31, 32 - m_tileBits - m_polyBits);
@@ -546,7 +546,7 @@ void dtNavMesh::connectIntLinks(dtMeshTile* tile)
 			if (idx != DT_NULL_LINK)
 			{
 				dtLink* link = &tile->links[idx];
-				link->ref = base | (dtPolyRef)(poly->neis[j]-1);
+				link->ref = base | (dtPolyRef)(poly->neis[j]-1);//j号点开始的边的临接poly的索引 这里-1是因为生成的时候+1了（+1的原因是0表示是边界）
 				link->edge = (unsigned char)j;
 				link->side = 0xff;
 				link->bmin = link->bmax = 0;
@@ -562,7 +562,7 @@ void dtNavMesh::baseOffMeshLinks(dtMeshTile* tile)
 {
 	if (!tile) return;
 	
-	dtPolyRef base = getPolyRefBase(tile);
+	dtPolyRef base = getPolyRefBase(tile);//当前这个tile的基编号
 	
 	// Base off-mesh connection start points.
 	for (int i = 0; i < tile->header->offMeshConCount; ++i)
@@ -978,7 +978,7 @@ dtStatus dtNavMesh::addTile(unsigned char* data, int dataSize, int flags,
 	const int headerSize = dtAlign4(sizeof(dtMeshHeader));
 	const int vertsSize = dtAlign4(sizeof(float)*3*header->vertCount);
 	const int polysSize = dtAlign4(sizeof(dtPoly)*header->polyCount);
-	const int linksSize = dtAlign4(sizeof(dtLink)*(header->maxLinkCount));
+	const int linksSize = dtAlign4(sizeof(dtLink)*(header->maxLinkCount));//总的多边形的边数
 	const int detailMeshesSize = dtAlign4(sizeof(dtPolyDetail)*header->detailMeshCount);
 	const int detailVertsSize = dtAlign4(sizeof(float)*3*header->detailVertCount);
 	const int detailTrisSize = dtAlign4(sizeof(unsigned char)*4*header->detailTriCount);
@@ -1038,7 +1038,7 @@ dtStatus dtNavMesh::addTile(unsigned char* data, int dataSize, int flags,
 	// Connect with neighbour tiles.
 	for (int i = 0; i < 8; ++i)
 	{
-		nneis = getNeighbourTilesAt(header->x, header->y, i, neis, MAX_NEIS);
+		nneis = getNeighbourTilesAt(header->x, header->y, i, neis, MAX_NEIS);//返回相连的tile，目前我看的是只有一个tile的
 		for (int j = 0; j < nneis; ++j)
 		{
 			connectExtLinks(tile, neis[j], i);
@@ -1091,7 +1091,7 @@ int dtNavMesh::getNeighbourTilesAt(const int x, const int y, const int side, dtM
 	return getTilesAt(nx, ny, tiles, maxTiles);
 }
 
-int dtNavMesh::getTilesAt(const int x, const int y, dtMeshTile** tiles, const int maxTiles) const
+int dtNavMesh::getTilesAt(const int x, const int y, dtMeshTile** tiles, const int maxTiles) const//找到所有属于x，y的tile，通过tiles返回，函数返回找到的数量
 {
 	int n = 0;
 	

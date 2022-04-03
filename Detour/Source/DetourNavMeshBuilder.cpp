@@ -133,7 +133,7 @@ static void subdivide(BVItem* items, int nitems, int imin, int imax, int& curNod
 	else
 	{
 		// Split
-		calcExtends(items, nitems, imin, imax, node.bmin, node.bmax);
+		calcExtends(items, nitems, imin, imax, node.bmin, node.bmax);//计算从imin -- imax之间的aabb，存入node.bmin, node.bmax中
 		
 		int	axis = longestAxis(node.bmax[0] - node.bmin[0],
 							   node.bmax[1] - node.bmin[1],
@@ -164,7 +164,7 @@ static void subdivide(BVItem* items, int nitems, int imin, int imax, int& curNod
 		
 		int iescape = curNode - icur;
 		// Negative index means escape.
-		node.i = -iescape;
+		node.i = -iescape; //负数表示当前点后面多少个是属于这个点的孩子（正数表示是叶子节点，并且指明是poly的索引）
 	}
 }
 
@@ -172,7 +172,7 @@ static int createBVTree(dtNavMeshCreateParams* params, dtBVNode* nodes, int /*nn
 {
 	// Build tree
 	float quantFactor = 1 / params->cs;
-	BVItem* items = (BVItem*)dtAlloc(sizeof(BVItem)*params->polyCount, DT_ALLOC_TEMP);
+	BVItem* items = (BVItem*)dtAlloc(sizeof(BVItem)*params->polyCount, DT_ALLOC_TEMP); //每一个poly的aabb盒，i是poly的索引
 	for (int i = 0; i < params->polyCount; i++)
 	{
 		BVItem& it = items[i];
@@ -195,7 +195,7 @@ static int createBVTree(dtNavMeshCreateParams* params, dtBVNode* nodes, int /*nn
 				dtVmax(bmax, &dv[j * 3]);
 			}
 
-			// BV-tree uses cs for all dimensions
+			// BV-tree uses cs for all dimensions用cd做尺寸
 			it.bmin[0] = (unsigned short)dtClamp((int)((bmin[0] - params->bmin[0])*quantFactor), 0, 0xffff);
 			it.bmin[1] = (unsigned short)dtClamp((int)((bmin[1] - params->bmin[1])*quantFactor), 0, 0xffff);
 			it.bmin[2] = (unsigned short)dtClamp((int)((bmin[2] - params->bmin[2])*quantFactor), 0, 0xffff);
@@ -363,8 +363,8 @@ bool dtCreateNavMeshData(dtNavMeshCreateParams* params, unsigned char** outData,
 	const int totVertCount = params->vertCount + storedOffMeshConCount*2;
 	
 	// Find portal edges which are at tile borders.
-	int edgeCount = 0;
-	int portalCount = 0;
+	int edgeCount = 0;//总的多边形的边数
+	int portalCount = 0;//不知道是干啥的
 	for (int i = 0; i < params->polyCount; ++i)
 	{
 		const unsigned short* p = &params->polys[i*2*nvp];
@@ -385,8 +385,8 @@ bool dtCreateNavMeshData(dtNavMeshCreateParams* params, unsigned char** outData,
 	const int maxLinkCount = edgeCount + portalCount*2 + offMeshConLinkCount*2;
 	
 	// Find unique detail vertices.
-	int uniqueDetailVertCount = 0;
-	int detailTriCount = 0;
+	int uniqueDetailVertCount = 0;  //细节顶点的数量（不包括原始的，params->detailMeshes[i*4+1]是原始加插入的顶点合集）
+	int detailTriCount = 0;//细节三角形的数量
 	if (params->detailMeshes)
 	{
 		// Has detail mesh, count unique detail vertex count and use input detail tri count.
@@ -394,8 +394,8 @@ bool dtCreateNavMeshData(dtNavMeshCreateParams* params, unsigned char** outData,
 		for (int i = 0; i < params->polyCount; ++i)
 		{
 			const unsigned short* p = &params->polys[i*nvp*2];
-			int ndv = params->detailMeshes[i*4+1];
-			int nv = 0;
+			int ndv = params->detailMeshes[i*4+1];//params->detailMeshes[i*4+1]是原始加插入的顶点合集
+			int nv = 0;//原始多边形的顶点数
 			for (int j = 0; j < nvp; ++j)
 			{
 				if (p[j] == MESH_NULL_IDX) break;
@@ -449,7 +449,7 @@ bool dtCreateNavMeshData(dtNavMeshCreateParams* params, unsigned char** outData,
 	unsigned char* d = data;
 
 	dtMeshHeader* header = dtGetThenAdvanceBufferPointer<dtMeshHeader>(d, headerSize);
-	float* navVerts = dtGetThenAdvanceBufferPointer<float>(d, vertsSize);
+	float* navVerts = dtGetThenAdvanceBufferPointer<float>(d, vertsSize);//点的坐标（真实的）
 	dtPoly* navPolys = dtGetThenAdvanceBufferPointer<dtPoly>(d, polysSize);
 	d += linksSize; // Ignore links; just leave enough space for them. They'll be created on load.
 	dtPolyDetail* navDMeshes = dtGetThenAdvanceBufferPointer<dtPolyDetail>(d, detailMeshesSize);
@@ -472,8 +472,8 @@ bool dtCreateNavMeshData(dtNavMeshCreateParams* params, unsigned char** outData,
 	dtVcopy(header->bmin, params->bmin);
 	dtVcopy(header->bmax, params->bmax);
 	header->detailMeshCount = params->polyCount;
-	header->detailVertCount = uniqueDetailVertCount;
-	header->detailTriCount = detailTriCount;
+	header->detailVertCount = uniqueDetailVertCount; //细节顶点的数量（不包括原始的，params->detailMeshes[i*4+1]是原始加插入的顶点合集）
+	header->detailTriCount = detailTriCount;  //细节三角形的数量
 	header->bvQuantFactor = 1.0f / params->cs;
 	header->offMeshBase = params->polyCount;
 	header->walkableHeight = params->walkableHeight;
@@ -512,7 +512,7 @@ bool dtCreateNavMeshData(dtNavMeshCreateParams* params, unsigned char** outData,
 	
 	// Store polygons
 	// Mesh polys
-	const unsigned short* src = params->polys;
+	const unsigned short* src = params->polys; //poly里存了这个poly的点的索引和对应点的临接poly的id
 	for (int i = 0; i < params->polyCount; ++i)
 	{
 		dtPoly* p = &navPolys[i];
@@ -524,7 +524,7 @@ bool dtCreateNavMeshData(dtNavMeshCreateParams* params, unsigned char** outData,
 		{
 			if (src[j] == MESH_NULL_IDX) break;
 			p->verts[j] = src[j];
-			if (src[nvp+j] & 0x8000)
+			if (src[nvp+j] & 0x8000) //这种好像是border》0的情况
 			{
 				// Border or portal edge.
 				unsigned short dir = src[nvp+j] & 0xf;
@@ -541,7 +541,7 @@ bool dtCreateNavMeshData(dtNavMeshCreateParams* params, unsigned char** outData,
 			}
 			else
 			{
-				// Normal connection
+				// Normal connection  src[nvp+j]表示j开始的边的临接区域的索引（从0开始），这里+1是因为0被用来表示边界了（532行所示）
 				p->neis[j] = src[nvp+j]+1;
 			}
 			

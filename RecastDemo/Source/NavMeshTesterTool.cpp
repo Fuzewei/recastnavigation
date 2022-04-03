@@ -726,7 +726,7 @@ void NavMeshTesterTool::recalc()
 				m_nsmoothPath = 0;
 				
 				dtVcopy(&m_smoothPath[m_nsmoothPath*3], iterPos);
-				m_nsmoothPath++;
+				m_nsmoothPath++;//保存点的坐标
 				
 				// Move towards target a small advancement at a time until target reached or
 				// when ran out of memory to store the path.

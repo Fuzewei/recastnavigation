@@ -1375,7 +1375,7 @@ bool rcBuildPolyMeshDetail(rcContext* ctx, const rcPolyMesh& mesh, const rcCompa
 		for (int j = 0; j < ntris; ++j)
 		{
 			const int* t = &tris[j*4];
-			dmesh.tris[dmesh.ntris*4+0] = (unsigned char)t[0];  //三角形的索引信息（索引到dmesh.verts）
+			dmesh.tris[dmesh.ntris*4+0] = (unsigned char)t[0];  //细节三角形的索引信息（索引到dmesh.verts）
 			dmesh.tris[dmesh.ntris*4+1] = (unsigned char)t[1];
 			dmesh.tris[dmesh.ntris*4+2] = (unsigned char)t[2];
 			dmesh.tris[dmesh.ntris*4+3] = getTriFlags(&verts[t[0]*3], &verts[t[1]*3], &verts[t[2]*3], poly, npoly);//指示三角形的三个边是不是多边形的边线（从0开始0-1,1-2,2-0）

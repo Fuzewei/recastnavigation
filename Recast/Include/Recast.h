@@ -421,7 +421,7 @@ struct rcPolyMesh
 	rcPolyMesh();
 	~rcPolyMesh();
 	unsigned short* verts;	///< The mesh vertices. [Form: (x, y, z) * #nverts]
-	unsigned short* polys;	///< Polygon and neighbor data. [Length: #maxpolys * 2 * #nvp]  多边型的索引和临接信息，在节点的后面，表示对应节点的边的临接区域id
+	unsigned short* polys;	///< Polygon and neighbor data. [Length: #maxpolys * 2 * #nvp]  多边型的索引和临接信息，临接信息在节点的后面，表示对应节点的边的临接区域id，也就是在poly中的位置
 	unsigned short* regs;	///< The region id assigned to each polygon. [Length: #maxpolys] 对应polyid的reg
 	unsigned short* flags;	///< The user defined flags for each polygon. [Length: #maxpolys]
 	unsigned char* areas;	///< The area id assigned to each polygon. [Length: #maxpolys]对应polyid的area

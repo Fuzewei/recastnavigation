@@ -155,14 +155,14 @@ enum dtPolyTypes
 struct dtPoly
 {
 	/// Index to first link in linked list. (Or #DT_NULL_LINK if there is no link.)
-	unsigned int firstLink;
+	unsigned int firstLink;//这个poly的临接信息，指向tile->links，是第一个索引，后面的形成一个链表，tile->links里是dtLink类型
 
 	/// The indices of the polygon's vertices.
 	/// The actual vertices are located in dtMeshTile::verts.
 	unsigned short verts[DT_VERTS_PER_POLYGON];
 
 	/// Packed data representing neighbor polygons references and flags for each edge.
-	unsigned short neis[DT_VERTS_PER_POLYGON];
+	unsigned short neis[DT_VERTS_PER_POLYGON];//存的对应点开始的线的临接信息
 
 	/// The user defined polygon flags.
 	unsigned short flags;
@@ -201,9 +201,9 @@ struct dtPolyDetail
 /// @see dtMeshTile
 struct dtLink
 {
-	dtPolyRef ref;					///< Neighbour reference. (The neighbor that is linked to.)
+	dtPolyRef ref;					///< Neighbour reference. (The neighbor that is linked to.)邻居poly的索引
 	unsigned int next;				///< Index of the next link.
-	unsigned char edge;				///< Index of the polygon edge that owns this link.
+	unsigned char edge;				///< Index of the polygon edge that owns this link.边的开始点的索引
 	unsigned char side;				///< If a boundary link, defines on which side the link is.
 	unsigned char bmin;				///< If a boundary link, defines the minimum sub-edge area.
 	unsigned char bmax;				///< If a boundary link, defines the maximum sub-edge area.
@@ -250,9 +250,9 @@ struct dtMeshHeader
 {
 	int magic;				///< Tile magic number. (Used to identify the data format.)
 	int version;			///< Tile data format version number.
-	int x;					///< The x-position of the tile within the dtNavMesh tile grid. (x, y, layer)
+	int x;					///< The x-position of the tile within the dtNavMesh tile grid. (x, y, layer)一个一个瓦片的x坐标
 	int y;					///< The y-position of the tile within the dtNavMesh tile grid. (x, y, layer)
-	int layer;				///< The layer of the tile within the dtNavMesh tile grid. (x, y, layer)
+	int layer;				///< The layer of the tile within the dtNavMesh tile grid. (x, y, layer)以上三个能唯一定位一个瓦片
 	unsigned int userId;	///< The user defined id of the tile.
 	int polyCount;			///< The number of polygons in the tile.
 	int vertCount;			///< The number of vertices in the tile.
@@ -525,7 +525,7 @@ public:
 	///  @note This function is generally meant for internal use only.
 	///  @param[in]	salt	The tile's salt value.
 	///  @param[in]	it		The index of the tile.
-	///  @param[in]	ip		The index of the polygon within the tile.
+	///  @param[in]	ip		The index of the polygon within the tile.对一个poly进行编号，it是第几个tile，ip是tile里poly的编号 
 	inline dtPolyRef encodePolyId(unsigned int salt, unsigned int it, unsigned int ip) const
 	{
 #ifdef DT_POLYREF64
